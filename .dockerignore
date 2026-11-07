@@ -1,0 +1,9 @@
+.git
+.github
+.env
+.env.*
+data
+asannews
+__pycache__
+node_modules
+*.md
