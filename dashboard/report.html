@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>성과 통계 보고서 · 아산시 홍보 사업 성과 분석 시스템</title>
+<meta name="description" content="아산시 관련 온라인 뉴스 보도량의 추세·상관·요일·주제 통계 분석과 AI 해석 보고서입니다.">
+<link rel="icon" type="image/png" href="assets/asan_logo.png">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="아산시 홍보 사업 성과 통계 보고서">
+<meta property="og:description" content="보도량 추세·상관·요일 효과·주제별 확산력 통계 분석과 AI 해석">
+<meta property="og:url" content="%%ORIGIN%%/report.html">
+<meta property="og:image" content="%%ORIGIN%%/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="아산시 홍보 사업 성과 분석 시스템">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="data.js"></script>
+<style>
+:root {
+  --blue: #1d4f9c; --orange: #e8891a; --green: #2f8a3b; --red: #c8402f;
+  --bg: #f4f6fa; --card: #fff; --text: #18202e; --text-2: #4a5568; --muted: #7b8597; --line: #e2e7ef; --soft: #eef3fb; --grid: rgba(0,0,0,.06);
+  --shadow: 0 1px 2px rgba(16,24,40,.05), 0 4px 16px rgba(16,24,40,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --blue: #6f9be6; --orange: #f2a54a; --green: #5cb86a; --red: #e86a5a;
+    --bg: #0f141c; --card: #171e29; --text: #e8edf5; --text-2: #b4bfcf; --muted: #8592a6; --line: #283244; --soft: #1b2535; --grid: rgba(255,255,255,.07); --shadow: none; }
+}
+:root[data-theme="dark"] { --blue: #6f9be6; --orange: #f2a54a; --green: #5cb86a; --red: #e86a5a;
+  --bg: #0f141c; --card: #171e29; --text: #e8edf5; --text-2: #b4bfcf; --muted: #8592a6; --line: #283244; --soft: #1b2535; --grid: rgba(255,255,255,.07); --shadow: none; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: "Pretendard", system-ui, -apple-system, "Malgun Gothic", sans-serif;
+  font-size: 14.5px; line-height: 1.7; word-break: keep-all; -webkit-font-smoothing: antialiased; }
+a { color: var(--blue); }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+.powered { background: #0b1220; color: #9fb0c8; font-size: 12px; text-align: right; padding: 4px 0; }
+.powered b { color: #fff; letter-spacing: .08em; }
+header { background: var(--card); border-bottom: 1px solid var(--line); padding: 22px 0; }
+header .wrap { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+header img { width: 46px; height: 46px; }
+header h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+header .sub { color: var(--muted); font-size: 12.5px; }
+.grow { flex: 1 1 360px; min-width: 0; }
+.btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--card); color: var(--text);
+  padding: 7px 13px; border-radius: 8px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; }
+.btn:hover { border-color: var(--blue); }
+.sample-banner { background: #fff4e0; color: #8a4b00; border-bottom: 1px solid #f3d29b; font-size: 13px; padding: 8px 0; text-align: center; font-weight: 600; }
+nav.toc { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; margin-top: 20px; font-size: 13px; }
+nav.toc a { margin-right: 12px; text-decoration: none; white-space: nowrap; display: inline-block; }
+section { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-top: 18px; box-shadow: var(--shadow); min-width: 0; }
+section h2 { margin: 0 0 12px; font-size: 18px; font-weight: 800; display: flex; gap: 10px; align-items: baseline; }
+section h2 .no { color: var(--blue); font-size: 13px; letter-spacing: .1em; }
+section h3 { font-size: 14.5px; margin: 16px 0 8px; }
+.ai { background: color-mix(in srgb, var(--orange) 9%, var(--card)); border-left: 4px solid var(--orange); border-radius: 8px; padding: 12px 16px; margin-top: 14px; }
+.ai .tag { font-size: 11.5px; font-weight: 700; color: var(--orange); letter-spacing: .05em; display: block; margin-bottom: 4px; }
+.ai p { margin: 0; white-space: pre-line; }
+.ai.none { border-left-color: var(--muted); background: var(--soft); color: var(--muted); }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th, td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: left; }
+th { background: var(--soft); color: var(--muted); font-size: 12.5px; text-align: center; white-space: nowrap; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.c { text-align: center; }
+.sig { display: inline-block; font-size: 11px; font-weight: 700; padding: 0 7px; border-radius: 999px; background: var(--blue); color: #fff; margin-left: 4px; vertical-align: 1px; }
+.ns { display: inline-block; font-size: 11px; padding: 0 7px; border-radius: 999px; background: var(--soft); color: var(--muted); margin-left: 4px; }
+.note { font-size: 12.5px; color: var(--muted); }
+.chart-box { position: relative; height: 300px; width: 100%; }
+.g2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; }
+.kv { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; }
+.kv div { background: var(--soft); border-radius: 10px; padding: 10px 12px; }
+.kv .k { font-size: 12px; color: var(--muted); font-weight: 600; }
+.kv .v { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.headline { font-size: 17px; font-weight: 700; margin: 0 0 10px; }
+ul.tight { margin: 6px 0 0; padding-left: 18px; }
+ul.tight li { margin: 3px 0; }
+.heat td { text-align: center; font-variant-numeric: tabular-nums; font-size: 12.5px; padding: 6px 4px; min-width: 52px; }
+.heat th { font-size: 12px; }
+.heat th.row { text-align: left; }
+select { font: inherit; font-size: 13px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--card); color: var(--text); }
+footer { margin-top: 30px; border-top: 1px solid var(--line); background: var(--card); padding: 20px 0; font-size: 13px; color: var(--muted); }
+footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+footer b { color: var(--text); }
+@media (max-width: 760px) { .g2 { grid-template-columns: minmax(0,1fr); } .kv { grid-template-columns: repeat(2, minmax(0,1fr)); } section { padding: 16px; } .wrap { padding: 0 16px; } }
+@media print { .powered, nav.toc, .btn { display: none; } section { break-inside: avoid; box-shadow: none; } }
+</style>
+</head>
+<body>
+<div class="powered"><div class="wrap">Powered By <b>YILOWOON</b></div></div>
+<header>
+  <div class="wrap">
+    <img src="assets/asan_logo.png" alt="아산시 로고">
+    <div class="grow">
+      <h1>아산시 홍보 사업 성과 통계 보고서</h1>
+      <div class="sub" id="meta">-</div>
+    </div>
+    <a class="btn" href="./">← 대시보드</a>
+    <button class="btn" onclick="window.print()">인쇄</button>
+    <button class="btn" id="themeBtn">◐ 화면 모드</button>
+  </div>
+</header>
+<div class="sample-banner" id="sampleBanner" hidden>⚠ 샘플 데이터로 만든 보고서입니다. 실제 보도 현황이 아닙니다.</div>
+
+<main class="wrap" id="main">
+  <nav class="toc">
+    <a href="#s1">1. 분석 요약</a><a href="#s2">2. 기술통계</a><a href="#s3">3. 추세</a><a href="#s4">4. 상관</a><a href="#s5">5. 요일</a>
+    <a href="#s6">6. 주제별 확산력</a><a href="#s7">7. 주제 구성</a><a href="#s8">8. 홍보비</a><a href="#s9">9. 제언·한계·방법</a>
+  </nav>
+
+  <section id="s1"><h2><span class="no">01</span>분석 요약</h2>
+    <p class="headline" id="headline"></p>
+    <div class="kv" id="summaryKv"></div>
+    <h3>핵심 발견</h3><ul class="tight" id="findings"></ul>
+  </section>
+
+  <section id="s2"><h2><span class="no">02</span>기술통계</h2>
+    <div class="table-wrap"><table id="descTable"></table></div>
+    <p class="note" id="descNote"></p>
+  </section>
+
+  <section id="s3"><h2><span class="no">03</span>추세 — 주간 보도량</h2>
+    <div class="chart-box"><canvas id="cTrend"></canvas></div>
+    <div class="table-wrap" style="margin-top:12px"><table id="trendTable"></table></div>
+    <div class="ai" data-sec="trend"></div>
+  </section>
+
+  <section id="s4"><h2><span class="no">04</span>상관 — 주간 지표와 보도 건수</h2>
+    <div class="table-wrap"><table id="corrTable"></table></div>
+    <p class="note">유의성은 Holm 보정 p 기준 · * p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001 · 95% 신뢰구간은 Fisher z 변환</p>
+    <div class="g2" style="margin-top:12px">
+      <div><h3>산점도 <select id="scatterSel" aria-label="지표 선택"></select></h3><div class="chart-box"><canvas id="cScatter"></canvas></div></div>
+      <div><h3>상관행렬 <span class="note">(Pearson r, 파랑 + / 빨강 −)</span></h3><div class="table-wrap"><table class="heat" id="corrMatrix"></table></div></div>
+    </div>
+    <div class="ai" data-sec="correlation"></div>
+  </section>
+
+  <section id="s5"><h2><span class="no">05</span>요일 효과</h2>
+    <div class="g2">
+      <div class="chart-box"><canvas id="cWeekday"></canvas></div>
+      <div class="table-wrap"><table id="weekdayTable"></table></div>
+    </div>
+    <div class="ai" data-sec="weekday"></div>
+  </section>
+
+  <section id="s6"><h2><span class="no">06</span>주제별 확산력 — 이슈당 보도 매체 수</h2>
+    <div class="g2">
+      <div class="chart-box"><canvas id="cSpread"></canvas></div>
+      <div class="table-wrap"><table id="spreadTable"></table></div>
+    </div>
+    <p class="note" id="spreadNote"></p>
+    <div class="ai" data-sec="topic_spread"></div>
+  </section>
+
+  <section id="s7"><h2><span class="no">07</span>주제 구성 변화 — 월별 주제 비중(%)</h2>
+    <div class="table-wrap"><table class="heat" id="tmHeat"></table></div>
+    <p class="note" id="tmNote"></p>
+    <div class="ai" data-sec="topic_month"></div>
+  </section>
+
+  <section id="s8"><h2><span class="no">08</span>홍보비 연계</h2>
+    <div id="budgetBody"></div>
+    <div class="ai" data-sec="budget"></div>
+  </section>
+
+  <section id="s9"><h2><span class="no">09</span>제언 · 데이터 한계 · 분석 방법</h2>
+    <h3>제언</h3><ul class="tight" id="recs"></ul>
+    <h3>데이터 한계 및 유의사항</h3><ul class="tight" id="limits"></ul>
+    <h3>분석 방법</h3>
+    <ul class="tight">
+      <li>단위: 월요일 시작 주간. 진행 중인 마지막 주는 제외함.</li>
+      <li>추세: 주차 순번과 주간 보도 건수의 단순 선형회귀(기울기, R², p) 및 Spearman 순위상관.</li>
+      <li>상관: Pearson r(95% CI는 Fisher z), Spearman ρ, 다중비교는 Holm-Bonferroni 보정.</li>
+      <li>요일: 평일 vs 주말 일간 보도 건수 Mann-Whitney U(효과크기 r = |Z|/√N), 7개 요일 Kruskal-Wallis H.</li>
+      <li>주제별 확산력: 이슈당 보도 매체 수의 주제별 Kruskal-Wallis(ε² = H/(n−1)), 이슈 20개 이상 주제만 검정.</li>
+      <li>주제 구성: 주제×월 교차표 카이제곱 검정과 Cramér's V.</li>
+      <li>모든 수치는 Python(scipy)으로 결정적으로 계산하며, AI(Gemini)는 계산 결과 JSON만 받아 문장으로 해석함.</li>
+    </ul>
+  </section>
+</main>
+
+<footer><div class="wrap"><span>운영 <b id="operator">사단법인 도시공동체본부</b></span><span>Powered By <b>YILOWOON</b></span></div></footer>
+
+<script>
+(function () {
+  "use strict";
+  var D = window.ASAN_DATA || { meta: {} }, R = window.ASAN_REPORT || {}, M = D.meta || {};
+  var ST = R.stats || {}, AI = R.ai || null;
+  var charts = {};
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  var fmt = function (n, d) { return n == null || isNaN(n) ? "-" : Number(n).toLocaleString("ko-KR", { maximumFractionDigits: d == null ? 0 : d, minimumFractionDigits: d && d > 0 ? Math.min(d, 2) : 0 }); };
+  function pf(p) { if (p == null) return "-"; if (p < 0.001) return "<0.001"; return p.toFixed(3); }
+  function stars(p) { return p == null ? "" : p < 0.001 ? "***" : p < 0.01 ? "**" : p < 0.05 ? "*" : ""; }
+  function badge(p) { var s = stars(p); return s ? '<span class="sig">' + s + "</span>" : '<span class="ns">n.s.</span>'; }
+
+  // 테마
+  try { var t = localStorage.getItem("asan-theme"); if (t) document.documentElement.setAttribute("data-theme", t); } catch (e) {}
+  $("themeBtn").onclick = function () {
+    var cur = document.documentElement.getAttribute("data-theme");
+    var dark = cur ? cur === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
+    try { localStorage.setItem("asan-theme", dark ? "light" : "dark"); } catch (e) {}
+    location.reload();
+  };
+  function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+  Chart.defaults.font.family = "Pretendard, system-ui, sans-serif";
+  Chart.defaults.color = css("--text-2");
+  Chart.defaults.borderColor = css("--grid");
+  var BLUE = css("--blue"), ORANGE = css("--orange"), GREEN = css("--green"), RED = css("--red");
+
+  $("sampleBanner").hidden = !M.sample;
+  if (M.operator) $("operator").textContent = M.operator;
+  var aiLabel = { fresh: "AI 해석: " + (R.model || "Gemini"), reused: "AI 해석: 직전 해석 재사용", none: "AI 해석 없음(통계만)" }[R.ai_status || "none"];
+  $("meta").textContent = (ST.period ? "분석 기간 " + ST.period.first + " ~ " + ST.period.last + " (" + ST.period.weeks + "주)" : "분석 자료 없음") +
+    " · 생성 " + (R.generated || "-").replace("T", " ").slice(0, 16) + " · " + aiLabel;
+
+  if (!ST.available) {
+    $("main").innerHTML = '<section><p>통계 분석 결과가 아직 없습니다. <code>python run.py report</code>를 실행하세요.</p></section>';
+    return;
+  }
+
+  // AI 박스
+  [].forEach.call(document.querySelectorAll(".ai[data-sec]"), function (el) {
+    var txt = AI && AI.sections && AI.sections[el.dataset.sec];
+    if (txt) el.innerHTML = '<span class="tag">AI 해석</span><p>' + esc(txt) + "</p>";
+    else { el.className = "ai none"; el.innerHTML = '<span class="tag" style="color:var(--muted)">AI 해석</span><p>AI 해석이 없습니다. GEMINI_API_KEY 설정 후 <code>python run.py report</code>로 생성됩니다.</p>'; }
+  });
+
+  var de = ST.descriptive || {}, tr = ST.trend || {}, wd = ST.weekday || {};
+
+  // 1. 요약
+  $("headline").textContent = AI && AI.headline ? AI.headline :
+    "주간 평균 " + fmt(de.weekly && de.weekly.mean, 1) + "건 보도, 추세 기울기 주당 " + fmt(tr.slope, 2) + "건" + (tr.significant ? "(유의함)" : "(유의하지 않음)") + ".";
+  $("summaryKv").innerHTML = [
+    ["총 보도", fmt(de.total_articles) + "건"], ["통합 이슈", fmt(de.total_issues) + "개"],
+    ["보도 매체", fmt(de.total_press) + "곳"], ["추세(주당)", (tr.slope >= 0 ? "+" : "") + fmt(tr.slope, 2) + "건 " + stars(tr.p)]
+  ].map(function (x) { return '<div><div class="k">' + x[0] + '</div><div class="v">' + x[1] + "</div></div>"; }).join("");
+  var fnd = AI && AI.key_findings && AI.key_findings.length ? AI.key_findings : autoFindings();
+  $("findings").innerHTML = fnd.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("");
+  function autoFindings() {
+    var out = [];
+    if (tr.slope != null) out.push("주간 보도량은 주당 " + fmt(tr.slope, 2) + "건 " + (tr.slope >= 0 ? "증가" : "감소") + " 추세임(R² " + fmt(tr.r2, 3) + ", p " + pf(tr.p) + ").");
+    (ST.correlation || []).filter(function (c) { return c.significant; }).slice(0, 2).forEach(function (c) { out.push(c.label + "와 보도 건수의 상관 r = " + fmt(c.r, 3) + "(Holm p " + pf(c.p_holm) + ")임."); });
+    if (wd.weekday_mean != null) out.push("평일 일평균 " + fmt(wd.weekday_mean, 2) + "건, 주말 " + fmt(wd.weekend_mean, 2) + "건(p " + pf(wd.p) + ").");
+    return out;
+  }
+
+  // 2. 기술통계
+  var rows = [["주간 보도 건수", de.weekly], ["일간 보도 건수", de.daily]];
+  $("descTable").innerHTML = "<thead><tr><th>구분</th><th>n</th><th>평균</th><th>표준편차</th><th>중앙값</th><th>최소</th><th>최대</th><th>변동계수</th></tr></thead><tbody>" +
+    rows.filter(function (r) { return r[1]; }).map(function (r) { var x = r[1]; return "<tr><td>" + r[0] + '</td><td class="num">' + fmt(x.n) + '</td><td class="num">' + fmt(x.mean, 2) + '</td><td class="num">' + fmt(x.sd, 2) + '</td><td class="num">' + fmt(x.median, 1) + '</td><td class="num">' + fmt(x.min) + '</td><td class="num">' + fmt(x.max) + '</td><td class="num">' + fmt(x.cv, 3) + "</td></tr>"; }).join("") + "</tbody>";
+  $("descNote").textContent = "진행 중인 주(" + ST.period.excluded_current_week + " 시작)는 제외 · 조회수 확인율 " + fmt((de.views_rate || 0) * 100, 1) + "%" + (de.autocorr_lag1 != null ? " · 주간 보도량 1차 자기상관 " + fmt(de.autocorr_lag1, 3) : "");
+
+  // 3. 추세
+  if (tr.points) {
+    var lbl = tr.points.map(function (p) { return p.week.slice(5); });
+    chartOf("cTrend", { type: "bar", data: { labels: lbl, datasets: [
+      { type: "bar", label: "주간 보도 건수", data: tr.points.map(function (p) { return p.articles; }), backgroundColor: BLUE + "cc", borderRadius: 3, order: 2 },
+      { type: "line", label: "회귀선", data: tr.points.map(function (p, i) { return tr.intercept + tr.slope * i; }), borderColor: ORANGE, borderWidth: 2, pointRadius: 0, order: 1 }
+    ] }, options: opts() });
+    $("trendTable").innerHTML = "<thead><tr><th>기울기(주당)</th><th>절편</th><th>R²</th><th>p</th><th>Spearman ρ</th><th>ρ의 p</th></tr></thead><tbody><tr>" +
+      '<td class="num">' + fmt(tr.slope, 3) + badge(tr.p) + '</td><td class="num">' + fmt(tr.intercept, 2) + '</td><td class="num">' + fmt(tr.r2, 3) + '</td><td class="num">' + pf(tr.p) + '</td><td class="num">' + fmt(tr.rho != null ? tr.rho : tr.spearman_rho, 3) + '</td><td class="num">' + pf(tr.spearman_p) + "</td></tr></tbody>";
+  } else { $("cTrend").parentNode.innerHTML = '<p class="note">주간 자료가 4주 미만이라 추세를 분석하지 않았습니다.</p>'; }
+
+  // 4. 상관
+  var corr = ST.correlation || [];
+  $("corrTable").innerHTML = "<thead><tr><th>지표</th><th>n</th><th>Pearson r</th><th>95% CI</th><th>Spearman ρ</th><th>p</th><th>Holm p</th><th>강도</th></tr></thead><tbody>" +
+    (corr.length ? corr.map(function (c) {
+      return "<tr><td>" + esc(c.label) + (c.note ? '<div class="note">※ ' + esc(c.note) + "</div>" : "") + '</td><td class="num">' + c.n + '</td><td class="num">' + fmt(c.r, 3) + badge(c.p_holm) + '</td><td class="num">[' + fmt(c.ci95[0], 2) + ", " + fmt(c.ci95[1], 2) + ']</td><td class="num">' + fmt(c.rho, 3) + '</td><td class="num">' + pf(c.p) + '</td><td class="num">' + pf(c.p_holm) + '</td><td class="c">' + c.strength + "</td></tr>";
+    }).join("") : '<tr><td colspan="8" class="c note">분석할 주간 자료가 부족합니다.</td></tr>') + "</tbody>";
+  corr.forEach(function (c, i) { var o = document.createElement("option"); o.value = i; o.textContent = c.label; $("scatterSel").appendChild(o); });
+  function drawScatter(i) {
+    var c = corr[i]; if (!c) return;
+    var xs = c.points.map(function (p) { return p[0]; }), ys = c.points.map(function (p) { return p[1]; });
+    var n = xs.length, mx = xs.reduce(function (a, b) { return a + b; }, 0) / n, my = ys.reduce(function (a, b) { return a + b; }, 0) / n;
+    var sxy = 0, sxx = 0; for (var k = 0; k < n; k++) { sxy += (xs[k] - mx) * (ys[k] - my); sxx += (xs[k] - mx) * (xs[k] - mx); }
+    var b = sxx ? sxy / sxx : 0, a = my - b * mx, lo = Math.min.apply(null, xs), hi = Math.max.apply(null, xs);
+    chartOf("cScatter", { type: "scatter", data: { datasets: [
+      { label: "주", data: c.points.map(function (p) { return { x: p[0], y: p[1] }; }), backgroundColor: BLUE + "aa", pointRadius: 4 },
+      { type: "line", label: "회귀선", data: [{ x: lo, y: a + b * lo }, { x: hi, y: a + b * hi }], borderColor: ORANGE, borderWidth: 2, pointRadius: 0 }
+    ] }, options: opts({ scales: { x: { beginAtZero: true, title: { display: true, text: c.label } }, y: { beginAtZero: true, title: { display: true, text: "주간 보도 건수" } } }, plugins: { legend: { display: false } } }) });
+  }
+  $("scatterSel").onchange = function () { drawScatter(+this.value); };
+  drawScatter(0);
+  var cm = ST.corr_matrix;
+  function divColor(r) {
+    if (r == null) return "transparent";
+    var a = Math.min(1, Math.abs(r));
+    return r >= 0 ? "rgba(29,79,156," + (a * 0.85).toFixed(2) + ")" : "rgba(200,64,47," + (a * 0.85).toFixed(2) + ")";
+  }
+  if (cm) {
+    $("corrMatrix").innerHTML = "<thead><tr><th></th>" + cm.labels.map(function (l) { return "<th>" + esc(l) + "</th>"; }).join("") + "</tr></thead><tbody>" +
+      cm.matrix.map(function (row, i) { return '<tr><th class="row">' + esc(cm.labels[i]) + "</th>" + row.map(function (v) { return '<td style="background:' + divColor(v) + ";color:" + (v != null && Math.abs(v) > 0.55 ? "#fff" : "inherit") + '">' + fmt(v, 2) + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody>";
+  }
+
+  // 5. 요일
+  if (wd.by_day) {
+    chartOf("cWeekday", { type: "bar", data: { labels: wd.by_day.map(function (d) { return d.day; }), datasets: [
+      { label: "일평균 보도 건수", data: wd.by_day.map(function (d) { return d.mean; }), backgroundColor: wd.by_day.map(function (d, i) { return i >= 5 ? ORANGE : BLUE; }), borderRadius: 3 }
+    ] }, options: opts({ plugins: { legend: { display: false } } }) });
+    $("weekdayTable").innerHTML = "<thead><tr><th>검정</th><th>통계량</th><th>p</th><th>효과크기</th></tr></thead><tbody>" +
+      '<tr><td>평일 vs 주말 (Mann-Whitney U)<div class="note">평일 ' + fmt(wd.weekday_mean, 2) + "건 · 주말 " + fmt(wd.weekend_mean, 2) + '건</div></td><td class="num">U = ' + fmt(wd.U, 1) + '</td><td class="num">' + pf(wd.p) + badge(wd.p) + '</td><td class="num">r = ' + fmt(wd.effect_r, 3) + "</td></tr>" +
+      '<tr><td>7개 요일 (Kruskal-Wallis)</td><td class="num">H = ' + fmt(wd.kw_H, 2) + '</td><td class="num">' + pf(wd.kw_p) + badge(wd.kw_p) + '</td><td class="c">-</td></tr></tbody>';
+  }
+
+  // 6. 주제별 확산력
+  var sp = ST.topic_spread || { topics: [] };
+  chartOf("cSpread", { type: "bar", data: { labels: sp.topics.map(function (t) { return t.topic; }), datasets: [
+    { label: "이슈당 평균 매체 수", data: sp.topics.map(function (t) { return t.mean_press; }), backgroundColor: sp.topics.map(function (t) { return t.issues >= 20 ? GREEN : GREEN + "66"; }), borderRadius: 3 }
+  ] }, options: opts({ indexAxis: "y", plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true }, y: { grid: { display: false } } } }) });
+  $("spreadTable").innerHTML = "<thead><tr><th>주제</th><th>이슈 수</th><th>평균 매체</th><th>중앙값</th><th>대형 확산 비율</th></tr></thead><tbody>" +
+    sp.topics.map(function (t) { return "<tr><td>" + esc(t.topic) + '</td><td class="num">' + fmt(t.issues) + '</td><td class="num">' + fmt(t.mean_press, 2) + '</td><td class="num">' + fmt(t.median_press, 1) + '</td><td class="num">' + fmt(t.big_share * 100, 1) + "%</td></tr>"; }).join("") + "</tbody>";
+  $("spreadNote").innerHTML = sp.kw_H != null ? "Kruskal-Wallis H = " + fmt(sp.kw_H, 2) + ", p " + pf(sp.p) + badge(sp.p) + ", ε² = " + fmt(sp.epsilon2, 3) + " (이슈 20개 이상 " + sp.n_topics + "개 주제, n = " + fmt(sp.n) + ") · 옅은 막대는 검정 제외 주제" : "이슈 20개 이상인 주제가 2개 미만이라 검정하지 않았습니다.";
+
+  // 7. 주제 구성
+  var tm = ST.topic_month || {};
+  if (tm.months) {
+    var colSum = tm.months.map(function (m, j) { return tm.counts.reduce(function (s, r) { return s + r[j]; }, 0); });
+    $("tmHeat").innerHTML = "<thead><tr><th>주제</th>" + tm.months.map(function (m) { return "<th>" + m.slice(2).replace("-", ".") + "</th>"; }).join("") + "</tr></thead><tbody>" +
+      tm.topics.map(function (t, i) {
+        return '<tr><th class="row">' + esc(t) + "</th>" + tm.months.map(function (m, j) {
+          var pct = colSum[j] ? tm.counts[i][j] / colSum[j] * 100 : 0;
+          return '<td style="background:rgba(47,138,59,' + Math.min(0.9, pct / 30).toFixed(2) + ");color:" + (pct > 17 ? "#fff" : "inherit") + '">' + fmt(pct, 1) + "</td>";
+        }).join("") + "</tr>";
+      }).join("") + '<tr><th class="row">합계(건)</th>' + colSum.map(function (s) { return '<td class="num" style="text-align:center">' + fmt(s) + "</td>"; }).join("") + "</tr></tbody>";
+    $("tmNote").innerHTML = tm.chi2 != null ? "카이제곱 χ² = " + fmt(tm.chi2, 2) + " (자유도 " + tm.dof + "), p " + pf(tm.p) + badge(tm.p) + ", Cramér's V = " + fmt(tm.cramers_v, 3) : "월 또는 주제가 2개 미만이라 검정하지 않았습니다.";
+  }
+
+  // 8. 홍보비
+  var bg = ST.budget || {};
+  if (!bg.available) $("budgetBody").innerHTML = '<p class="note">홍보비 자료(data/budget.csv: month,amount)가 없어 분석하지 않았습니다. 파일을 추가하면 월별 홍보비와 보도량의 상관, 보도 1건당 홍보비가 계산됩니다.</p>';
+  else {
+    $("budgetBody").innerHTML = '<div class="table-wrap"><table><thead><tr><th>월</th><th>홍보비(원)</th><th>보도 건수</th><th>보도 1건당 홍보비(원)</th></tr></thead><tbody>' +
+      bg.rows.map(function (r) { return '<tr><td class="c">' + r.month + '</td><td class="num">' + fmt(r.amount) + '</td><td class="num">' + fmt(r.articles) + '</td><td class="num">' + fmt(r.cost_per_article) + "</td></tr>"; }).join("") + "</tbody></table></div>" +
+      '<p class="note">' + (bg.r != null ? "월별 상관 r = " + fmt(bg.r, 3) + " (p " + pf(bg.p) + ", 95% CI [" + fmt(bg.ci95[0], 2) + ", " + fmt(bg.ci95[1], 2) + "]), Spearman ρ = " + fmt(bg.rho, 3) + ". " : "") + (bg.caution ? esc(bg.caution) : "") + "</p>";
+  }
+
+  // 9. 제언·한계
+  var recs = AI && AI.recommendations ? AI.recommendations : ["AI 해석이 생성되면 제언이 표시됩니다."];
+  $("recs").innerHTML = recs.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("");
+  var lim = (ST.limitations || []).concat(AI && AI.caveats ? AI.caveats : []);
+  $("limits").innerHTML = lim.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("");
+
+  function opts(extra) {
+    var o = { responsive: true, maintainAspectRatio: false, animation: false,
+      scales: { x: { grid: { color: css("--grid") }, ticks: { maxRotation: 0, autoSkip: true } }, y: { beginAtZero: true, grid: { color: css("--grid") } } },
+      plugins: { legend: { labels: { boxWidth: 12 } } } };
+    if (extra) { if (extra.scales) { o.scales.x = Object.assign(o.scales.x, extra.scales.x || {}); o.scales.y = Object.assign(o.scales.y, extra.scales.y || {}); }
+      if (extra.plugins) o.plugins = Object.assign(o.plugins, extra.plugins); if (extra.indexAxis) o.indexAxis = extra.indexAxis; }
+    return o;
+  }
+  function chartOf(id, cfg) { if (charts[id]) charts[id].destroy(); charts[id] = new Chart($(id), cfg); }
+})();
+</script>
+</body>
+</html>

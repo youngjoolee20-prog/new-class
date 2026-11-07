@@ -1,0 +1,72 @@
+name: 매일 뉴스 수집·분석
+
+on:
+  schedule:
+    # cron은 UTC 기준(KST = UTC+9). 정각을 피해 오전 8시(KST) 전후 3회 시도
+    - cron: "7 22 * * *"    # 07:07 KST
+    - cron: "37 22 * * *"   # 07:37 KST
+    - cron: "7 23 * * *"    # 08:07 KST
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-news
+  cancel-in-progress: false
+
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      TZ: Asia/Seoul
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
+
+      - name: 오늘 이미 갱신했는지 확인(예약 실행만)
+        id: check
+        run: |
+          skip=false
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            since="$(date +%Y-%m-%d)T07:00:00+09:00"
+            n=$(git log --since="$since" --author="github-actions" --oneline | wc -l)
+            if [ "$n" -gt 0 ]; then skip=true; echo "오늘 07시 이후 갱신 커밋이 있어 건너뜁니다."; fi
+          fi
+          echo "skip=$skip" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-python@v5
+        if: steps.check.outputs.skip != 'true'
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: 의존성 설치
+        if: steps.check.outputs.skip != 'true'
+        run: pip install -r requirements.txt
+
+      - name: 수집·분석·내보내기
+        if: steps.check.outputs.skip != 'true'
+        env:
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
+          NEWSTORE_API_KEY: ${{ secrets.NEWSTORE_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_TEXT_MODEL: gemini-2.5-flash
+        run: python run.py daily
+
+      - name: 결과 커밋
+        if: steps.check.outputs.skip != 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/*.db dashboard/data.js
+          if git diff --cached --quiet; then echo "변경 없음 — 커밋 생략"; exit 0; fi
+          git commit -m "데이터 갱신 $(date '+%Y-%m-%d %H:%M') KST"
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            echo "푸시 실패 — 재시도 $i"; sleep $((i * 10))
+          done
+          exit 1

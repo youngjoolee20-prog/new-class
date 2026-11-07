@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>아산시 홍보 사업 성과 분석 시스템</title>
+<meta name="description" content="아산시 관련 온라인 뉴스를 매일 자동 수집·분석해 홍보 사업 성과를 데이터로 보여 주는 대시보드입니다.">
+<link rel="icon" type="image/png" href="assets/asan_logo.png">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="아산시 홍보 사업 성과 분석 시스템">
+<meta property="og:description" content="아산시 관련 온라인 뉴스의 보도량·확산·매체·주제를 매일 자동 분석하는 공개 대시보드">
+<meta property="og:url" content="%%ORIGIN%%/">
+<meta property="og:image" content="%%ORIGIN%%/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="아산시 홍보 사업 성과 분석 시스템">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="data.js"></script>
+<style>
+:root {
+  --blue: #1d4f9c; --orange: #e8891a; --green: #2f8a3b; --red: #c8402f;
+  --bg: #f4f6fa; --card: #ffffff; --text: #18202e; --text-2: #4a5568; --muted: #7b8597;
+  --line: #e2e7ef; --soft: #eef3fb; --chip: #e9eef7; --shadow: 0 1px 2px rgba(16,24,40,.05), 0 4px 16px rgba(16,24,40,.05);
+  --grid: rgba(0,0,0,.06);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --blue: #6f9be6; --orange: #f2a54a; --green: #5cb86a; --red: #e86a5a;
+    --bg: #0f141c; --card: #171e29; --text: #e8edf5; --text-2: #b4bfcf; --muted: #8592a6;
+    --line: #283244; --soft: #1b2535; --chip: #222d3f; --shadow: 0 1px 2px rgba(0,0,0,.3);
+    --grid: rgba(255,255,255,.07);
+  }
+}
+:root[data-theme="dark"] {
+  --blue: #6f9be6; --orange: #f2a54a; --green: #5cb86a; --red: #e86a5a;
+  --bg: #0f141c; --card: #171e29; --text: #e8edf5; --text-2: #b4bfcf; --muted: #8592a6;
+  --line: #283244; --soft: #1b2535; --chip: #222d3f; --shadow: 0 1px 2px rgba(0,0,0,.3);
+  --grid: rgba(255,255,255,.07);
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font-family: "Pretendard", system-ui, -apple-system, "Malgun Gothic", sans-serif;
+  font-size: 14.5px; line-height: 1.6; word-break: keep-all; -webkit-font-smoothing: antialiased; }
+a { color: var(--blue); }
+.wrap { max-width: 1280px; margin: 0 auto; padding: 0 20px; }
+.powered { background: #0b1220; color: #9fb0c8; font-size: 12px; text-align: right; padding: 4px 0; letter-spacing: .02em; }
+.powered b { color: #fff; letter-spacing: .08em; }
+
+header.top { background: var(--card); border-bottom: 1px solid var(--line); }
+header.top .wrap { display: flex; align-items: center; gap: 16px; padding-top: 16px; padding-bottom: 16px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1 1 420px; }
+.brand img { width: 46px; height: 46px; flex: none; }
+.brand h1 { margin: 0; font-size: 21px; font-weight: 800; letter-spacing: -.02em; }
+.brand .sub { font-size: 12.5px; color: var(--muted); }
+.brand .sub b { color: var(--text-2); font-weight: 600; }
+.top-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--card);
+  color: var(--text); padding: 7px 13px; border-radius: 8px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; }
+.btn:hover { border-color: var(--blue); }
+.btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+.btn.primary:disabled { opacity: .55; cursor: not-allowed; }
+.badge-admin { background: var(--orange); color: #fff; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+
+.sample-banner { background: #fff4e0; color: #8a4b00; border-bottom: 1px solid #f3d29b; font-size: 13px; padding: 8px 0; text-align: center; font-weight: 600; }
+:root[data-theme="dark"] .sample-banner { background: #3a2a10; color: #f6c77c; border-color: #5a4320; }
+
+.filters { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.filters .wrap { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; }
+.seg { display: inline-flex; background: var(--chip); border-radius: 9px; padding: 3px; gap: 2px; flex-wrap: wrap; }
+.seg button { border: 0; background: transparent; color: var(--text-2); font: inherit; font-size: 13px; font-weight: 600; padding: 5px 11px; border-radius: 7px; cursor: pointer; }
+.seg button.on { background: var(--card); color: var(--blue); box-shadow: var(--shadow); }
+.filters label { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+.filters input[type=date], .filters select, .tools input, .tools select {
+  font: inherit; font-size: 13px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--card); color: var(--text); }
+.fgroup { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+main { padding: 20px 0 40px; }
+section.block { margin-top: 22px; }
+h2.sec { font-size: 17px; font-weight: 800; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; letter-spacing: -.01em; }
+h2.sec::before { content: ""; width: 4px; height: 17px; border-radius: 2px; background: var(--blue); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 16px 18px; min-width: 0; }
+.card h3 { margin: 0 0 10px; font-size: 14.5px; font-weight: 700; }
+.card h3 small { color: var(--muted); font-weight: 500; font-size: 12px; margin-left: 4px; }
+
+.kpis { display: grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap: 12px; }
+.kpi .label { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+.kpi .value { font-size: 26px; font-weight: 800; letter-spacing: -.02em; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.kpi .value small { font-size: 13px; font-weight: 600; color: var(--muted); margin-left: 2px; }
+.kpi .delta { font-size: 12px; font-weight: 600; margin-top: 2px; }
+.up { color: var(--green); } .down { color: var(--red); } .flat { color: var(--muted); }
+.kpi .hint { font-size: 11.5px; color: var(--muted); }
+
+.g2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 14px; }
+.g3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
+.chart-box { position: relative; height: 290px; width: 100%; }
+.chart-box.tall { height: 380px; }
+
+.summary-text { font-size: 15px; line-height: 1.75; margin: 0 0 14px; }
+.summary-text b { color: var(--blue); }
+.ind { background: var(--soft); border-radius: 10px; padding: 12px 14px; }
+.ind .k { font-size: 12.5px; font-weight: 700; color: var(--text-2); }
+.ind .v { font-size: 20px; font-weight: 800; margin: 2px 0; font-variant-numeric: tabular-nums; }
+.ind .d { font-size: 12px; color: var(--muted); }
+
+.ai-box { border-left: 4px solid var(--orange); }
+.ai-head { font-size: 16px; font-weight: 700; margin: 0 0 12px; }
+.ai-tag { display: inline-block; font-size: 11px; font-weight: 700; color: #fff; background: var(--orange); padding: 2px 8px; border-radius: 999px; margin-right: 6px; vertical-align: 2px; }
+.nums { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-bottom: 12px; }
+.nums div { background: var(--soft); border-radius: 10px; padding: 10px 12px; }
+.nums .k { font-size: 12px; color: var(--muted); font-weight: 600; }
+.nums .v { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.findings { margin: 0 0 12px; padding-left: 18px; }
+.findings li { margin: 3px 0; }
+
+.tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+.tools input[type=search] { flex: 1 1 220px; min-width: 0; }
+.tools .count { font-size: 12.5px; color: var(--muted); margin-left: auto; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+th { font-size: 12.5px; color: var(--muted); font-weight: 700; background: var(--soft); white-space: nowrap; text-align: center; }
+th.sortable { cursor: pointer; user-select: none; }
+th.sortable::after { content: " ↕"; opacity: .4; }
+th.asc::after { content: " ↑"; opacity: 1; } th.desc::after { content: " ↓"; opacity: 1; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.c { text-align: center; white-space: nowrap; }
+tr.issue { cursor: pointer; }
+tr.issue:hover td { background: var(--soft); }
+tr.issue td:first-child::before { content: "▸ "; color: var(--muted); }
+tr.issue.open td:first-child::before { content: "▾ "; }
+tr.sub td { background: var(--soft); font-size: 13px; }
+tr.sub ul { margin: 0; padding-left: 18px; }
+tr.sub li { margin: 2px 0; }
+.chip { display: inline-block; font-size: 11.5px; padding: 1px 8px; border-radius: 999px; background: var(--chip); color: var(--text-2); white-space: nowrap; }
+.pager { display: flex; gap: 6px; justify-content: center; align-items: center; margin-top: 10px; font-size: 13px; }
+.defs dt { font-weight: 700; margin-top: 8px; }
+.defs dd { margin: 2px 0 0; color: var(--text-2); }
+.limits li { margin: 4px 0; color: var(--text-2); }
+.empty { color: var(--muted); text-align: center; padding: 30px 0; }
+
+footer { border-top: 1px solid var(--line); background: var(--card); padding: 22px 0; font-size: 13px; color: var(--muted); }
+footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+footer b { color: var(--text); }
+
+/* 관리자 */
+.modal { position: fixed; inset: 0; background: rgba(8,12,20,.55); display: grid; place-items: center; z-index: 100; padding: 16px; }
+.modal .box { background: var(--card); border-radius: 14px; padding: 24px; width: min(360px, 100%); box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+.modal h3 { margin: 0 0 14px; }
+.modal input { width: 100%; font: inherit; padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 10px; background: var(--bg); color: var(--text); }
+.modal .err { color: var(--red); font-size: 13px; min-height: 20px; }
+.progress { font-size: 12.5px; color: var(--text-2); }
+
+@media (max-width: 1100px) { .kpis { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+@media (max-width: 820px) {
+  .g2, .g3 { grid-template-columns: minmax(0,1fr); }
+  .nums { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .filters { position: static; }
+}
+@media (max-width: 560px) {
+  .wrap { padding: 0 16px; }
+  .kpis { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .kpi .value { font-size: 22px; }
+  .brand h1 { font-size: 18px; }
+  .chart-box { height: 240px; }
+}
+</style>
+</head>
+<body>
+<div class="powered"><div class="wrap">Powered By <b>YILOWOON</b></div></div>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <img src="assets/asan_logo.png" alt="아산시 로고">
+      <div>
+        <h1 id="title">아산시 홍보 사업 성과 분석 시스템</h1>
+        <div class="sub">데이터 기간 <b id="period">-</b> · 갱신 <b id="generated">-</b><br>본 시스템은 매일 <span id="utime">오전 8시</span>(한국시간) 자동 갱신됩니다.</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span class="badge-admin" id="adminBadge" hidden>관리자 모드</span>
+      <button class="btn primary" id="refreshBtn" hidden>최신 데이터로 갱신</button>
+      <button class="btn" id="logoutBtn" hidden>로그아웃</button>
+      <span class="progress" id="progress" hidden></span>
+      <a class="btn" href="course.html">교육과정 소개</a>
+      <a class="btn" href="report.html">성과 보고서</a>
+      <button class="btn" id="themeBtn" title="화면 모드 전환">◐ 화면 모드</button>
+    </div>
+  </div>
+</header>
+<div class="sample-banner" id="sampleBanner" hidden>⚠ 샘플 데이터입니다. 실제 보도 현황이 아니며, 매체명은 '샘플매체'로 표시됩니다.</div>
+
+<div class="filters">
+  <div class="wrap">
+    <div class="fgroup"><label>기간</label>
+      <div class="seg" id="presets">
+        <button data-p="7">7일</button><button data-p="30" class="on">30일</button><button data-p="month">이번 달</button><button data-p="90">3개월</button><button data-p="all">전체</button>
+      </div>
+      <input type="date" id="from" aria-label="시작일"> ~ <input type="date" id="to" aria-label="종료일">
+    </div>
+    <div class="fgroup"><label>집계</label>
+      <div class="seg" id="units"><button data-u="day" class="on">일</button><button data-u="week">주</button><button data-u="month">월</button></div>
+    </div>
+    <div class="fgroup"><label for="topic">주제</label><select id="topic"><option value="-1">전체 주제</option></select></div>
+  </div>
+</div>
+
+<main class="wrap">
+  <section class="block">
+    <div class="kpis" id="kpis"></div>
+  </section>
+
+  <section class="block">
+    <h2 class="sec">보도 추이</h2>
+    <div class="g2">
+      <div class="card"><h3>보도 건수·이슈 수 추이 <small id="unitLabel1"></small></h3><div class="chart-box"><canvas id="cTrend"></canvas></div></div>
+      <div class="card"><h3>확인 조회수 추이 <small>조회수 공개 기사 기준</small></h3><div class="chart-box"><canvas id="cViews"></canvas></div></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="g2">
+      <div class="card"><h3>주제별 분포 <small>보도 건수</small></h3><div class="chart-box"><canvas id="cTopic"></canvas></div></div>
+      <div class="card"><h3>매체별 보도 TOP 15</h3><div class="chart-box tall"><canvas id="cPress"></canvas></div></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="g2">
+      <div class="card"><h3>매체별 조회수 TOP 15 <small>확인된 조회수 합계</small></h3><div class="chart-box tall"><canvas id="cPressViews"></canvas></div></div>
+      <div class="card">
+        <h3>홍보 성과 요약</h3>
+        <p class="summary-text" id="summaryText"></p>
+        <div class="g3" id="indicators" style="grid-template-columns:repeat(2,minmax(0,1fr))"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 class="sec">통계 분석 요약</h2>
+    <div class="card ai-box" id="aiBox">
+      <p class="ai-head" id="aiHead"></p>
+      <div class="nums" id="aiNums"></div>
+      <ul class="findings" id="aiFindings"></ul>
+      <a class="btn primary" href="report.html">성과 보고내용 보기 →</a>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 class="sec">기간별 성과표</h2>
+    <div class="card">
+      <div class="tools"><span class="count" id="ptCount"></span><button class="btn" id="ptCsv">CSV</button></div>
+      <div class="table-wrap"><table id="periodTable"></table></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 class="sec">주요 이슈</h2>
+    <div class="card">
+      <div class="tools"><input type="search" id="issueSearch" placeholder="이슈 제목 검색"><span class="count" id="issueCount"></span><button class="btn" id="issueCsv">CSV</button></div>
+      <div class="table-wrap"><table id="issueTable"></table></div>
+      <div class="pager" id="issuePager"></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 class="sec">기사 목록</h2>
+    <div class="card">
+      <div class="tools"><input type="search" id="artSearch" placeholder="제목·매체 검색"><span class="count" id="artCount"></span><button class="btn" id="artCsv">CSV</button></div>
+      <div class="table-wrap"><table id="artTable"></table></div>
+      <div class="pager" id="artPager"></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 class="sec">지표 정의 및 데이터 한계</h2>
+    <div class="g2">
+      <div class="card">
+        <h3>지표 정의</h3>
+        <dl class="defs">
+          <dt>보도 건수</dt><dd>선택 기간에 수집된 관련 온라인 기사 수(URL 기준 중복 제거).</dd>
+          <dt>통합 이슈</dt><dd>제목이 비슷한 기사(문자 2-gram 자카드 유사도 0.45 이상, 3일 이내)를 하나의 이슈로 묶은 수.</dd>
+          <dt>보도 매체</dt><dd>기사를 낸 서로 다른 언론사 수.</dd>
+          <dt>확인 조회수 · 공개율</dt><dd>원문에 조회수가 공개된 검증 매체 기사의 조회수 합계와, 전체 기사 중 조회수를 확인한 비율.</dd>
+          <dt>이슈당 평균 보도</dt><dd>보도 건수 ÷ 통합 이슈 수. 하나의 보도자료가 평균 몇 건으로 퍼졌는지 나타냄.</dd>
+          <dt>대형 확산 이슈</dt><dd><span id="bigDef">5</span>개 이상 매체가 보도한 이슈 수.</dd>
+          <dt>매체 다양성 · 이슈 집중도</dt><dd>매체 다양성 = 1 − HHI(매체별 점유율 제곱합). 이슈 집중도 = 상위 10% 이슈가 차지하는 보도 비중.</dd>
+          <dt>증감</dt><dd>선택 기간과 같은 길이의 직전 기간 대비 변화율.</dd>
+        </dl>
+      </div>
+      <div class="card">
+        <h3>데이터 한계</h3>
+        <ul class="limits">
+          <li>포털 뉴스 검색 API 결과를 기반으로 하므로 검색어에 걸리지 않는 기사, 지면·방송 보도는 누락될 수 있음.</li>
+          <li>조회수는 원문에 조회수를 공개하는 일부 매체에서만 확인되며, 전체 도달 규모를 대표하지 않음.</li>
+          <li>이슈 통합은 제목 유사도에 따른 자동 분류이므로 일부 오분류가 있을 수 있음.</li>
+          <li>주제는 키워드 기반 자동 분류이며, 하나의 기사는 하나의 주제로만 집계됨.</li>
+          <li>보도량과 다른 지표의 상관은 인과관계를 의미하지 않음.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap"><span>운영 <b id="operator">사단법인 도시공동체본부</b></span><span>Powered By <b>YILOWOON</b></span></div>
+</footer>
+
+<div class="modal" id="loginModal" hidden>
+  <form class="box" id="loginForm">
+    <h3>관리자 로그인</h3>
+    <input id="loginId" autocomplete="username" placeholder="아이디" required>
+    <input id="loginPw" type="password" autocomplete="current-password" placeholder="비밀번호" required>
+    <div class="err" id="loginErr"></div>
+    <button class="btn primary" style="width:100%;justify-content:center" type="submit">로그인</button>
+  </form>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var D = window.ASAN_DATA || { meta: {}, press: [], topics: [], clusters: {}, articles: [] };
+  var R = window.ASAN_REPORT || {};
+  var M = D.meta || {};
+  var $ = function (id) { return document.getElementById(id); };
+  var fmt = function (n, d) { return n == null || isNaN(n) ? "-" : Number(n).toLocaleString("ko-KR", { maximumFractionDigits: d == null ? 0 : d }); };
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  var safeUrl = function (u) { return /^https?:\/\//i.test(u || "") ? u : "#"; };
+
+  // 기사: [id, date, cluster, pressIdx, title, url, views, topicIdx]
+  var A = D.articles.map(function (a) { return { id: a[0], d: a[1], c: a[2], p: a[3], t: a[4], u: a[5], v: a[6], tp: a[7] }; });
+  var BIG = M.bigIssuePress || 5;
+
+  // ── 테마 ──
+  var THEME_KEY = "asan-theme";
+  function applyTheme(t) { if (t) document.documentElement.setAttribute("data-theme", t); else document.documentElement.removeAttribute("data-theme"); }
+  try { applyTheme(localStorage.getItem(THEME_KEY)); } catch (e) {}
+  $("themeBtn").onclick = function () {
+    var cur = document.documentElement.getAttribute("data-theme");
+    var dark = cur ? cur === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    var next = dark ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+    render();
+  };
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function () { render(); });
+  function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+  // ── 상단 정보 ──
+  $("period").textContent = M.first ? M.first + " ~ " + M.last : "데이터 없음";
+  $("generated").textContent = M.generated ? M.generated.replace("T", " ").slice(0, 16) : "-";
+  if (M.updateTime) $("utime").textContent = M.updateTime;
+  if (M.operator) $("operator").textContent = M.operator;
+  $("bigDef").textContent = BIG;
+  $("sampleBanner").hidden = !M.sample;
+
+  // ── 날짜 유틸 ──
+  function toD(s) { var p = s.split("-"); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function iso(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  function addDays(s, n) { var d = toD(s); d.setDate(d.getDate() + n); return iso(d); }
+  function diffDays(a, b) { return Math.round((toD(b) - toD(a)) / 86400000); }
+  function weekKey(s) { var d = toD(s); var w = (d.getDay() + 6) % 7; d.setDate(d.getDate() - w); return iso(d); }
+  function bucket(s, u) { return u === "day" ? s : u === "week" ? weekKey(s) : s.slice(0, 7); }
+  function bucketLabel(k, u) { return u === "week" ? k.slice(5) + " 주" : u === "month" ? k.replace("-", ".") : k.slice(5); }
+
+  var minD = M.first || iso(new Date()), maxD = M.last || iso(new Date());
+  $("from").min = $("to").min = minD; $("from").max = $("to").max = maxD;
+
+  // ── 상태 ──
+  var S = { from: addDays(maxD, -29) < minD ? minD : addDays(maxD, -29), to: maxD, unit: "day", topic: -1 };
+  D.topics.forEach(function (t, i) { var o = document.createElement("option"); o.value = i; o.textContent = t; $("topic").appendChild(o); });
+
+  function setPreset(p) {
+    S.to = maxD;
+    if (p === "all") S.from = minD;
+    else if (p === "month") S.from = maxD.slice(0, 8) + "01";
+    else S.from = addDays(maxD, -(+p - 1));
+    if (S.from < minD) S.from = minD;
+    var span = diffDays(S.from, S.to);
+    S.unit = span > 120 ? "week" : "day";
+    if (span > 400) S.unit = "month";
+    syncUnits();
+  }
+  function syncUnits() { [].forEach.call($("units").children, function (b) { b.classList.toggle("on", b.dataset.u === S.unit); }); }
+  $("presets").onclick = function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    [].forEach.call(this.children, function (x) { x.classList.toggle("on", x === b); });
+    setPreset(b.dataset.p); render();
+  };
+  $("units").onclick = function (e) { var b = e.target.closest("button"); if (!b) return; S.unit = b.dataset.u; syncUnits(); render(); };
+  $("topic").onchange = function () { S.topic = +this.value; render(); };
+  function onDate() {
+    var f = $("from").value, t = $("to").value; if (!f || !t) return;
+    if (f > t) { var x = f; f = t; t = x; }
+    S.from = f; S.to = t;
+    [].forEach.call($("presets").children, function (x) { x.classList.remove("on"); });
+    render();
+  }
+  $("from").onchange = onDate; $("to").onchange = onDate;
+
+  // ── 집계 ──
+  function filter(from, to) {
+    return A.filter(function (a) { return a.d >= from && a.d <= to && (S.topic < 0 || a.tp === S.topic); });
+  }
+  function summarize(list) {
+    var issues = {}, press = {}, views = 0, vn = 0;
+    list.forEach(function (a) {
+      var c = issues[a.c] || (issues[a.c] = { n: 0, press: {}, first: a.d, last: a.d });
+      c.n++; c.press[a.p] = 1; if (a.d < c.first) c.first = a.d; if (a.d > c.last) c.last = a.d;
+      press[a.p] = (press[a.p] || 0) + 1;
+      if (a.v != null) { views += a.v; vn++; }
+    });
+    var ids = Object.keys(issues);
+    var big = ids.filter(function (k) { return Object.keys(issues[k].press).length >= BIG; }).length;
+    return { n: list.length, issues: ids.length, issueMap: issues, press: Object.keys(press).length, pressMap: press,
+      views: views, vn: vn, rate: list.length ? vn / list.length : 0, perIssue: ids.length ? list.length / ids.length : 0, big: big };
+  }
+  function delta(cur, prev) {
+    if (prev == null || prev === 0) return cur > 0 ? { cls: "flat", txt: "직전 기간 자료 없음" } : { cls: "flat", txt: "변화 없음" };
+    var r = (cur - prev) / prev * 100;
+    if (Math.abs(r) < 0.05) return { cls: "flat", txt: "직전 동기간과 같음" };
+    return { cls: r > 0 ? "up" : "down", txt: (r > 0 ? "▲ " : "▼ ") + fmt(Math.abs(r), 1) + "% (직전 " + fmt(prev, prev < 10 ? 1 : 0) + ")" };
+  }
+
+  // ── 차트 ──
+  var charts = {};
+  function chart(id, cfg) {
+    if (charts[id]) charts[id].destroy();
+    charts[id] = new Chart($(id), cfg);
+  }
+  function baseOpts(extra) {
+    var grid = css("--grid"), tc = css("--text-2");
+    var o = { responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
+      plugins: { legend: { labels: { color: tc, boxWidth: 12, font: { family: "Pretendard" } } },
+        tooltip: { callbacks: { label: function (c) { var v = c.chart.options.indexAxis === "y" ? c.parsed.x : c.parsed.y; return " " + (c.dataset.label ? c.dataset.label + ": " : "") + fmt(v); } } } },
+      scales: { x: { ticks: { color: tc, maxRotation: 0, autoSkip: true, font: { family: "Pretendard" } }, grid: { color: grid } },
+        y: { beginAtZero: true, ticks: { color: tc, precision: 0, font: { family: "Pretendard" } }, grid: { color: grid } } } };
+    return Object.assign(o, extra || {});
+  }
+
+  function render() {
+    var cur = filter(S.from, S.to);
+    var span = diffDays(S.from, S.to) + 1;
+    var prevTo = addDays(S.from, -1), prevFrom = addDays(S.from, -span);
+    var prev = prevTo >= minD ? filter(prevFrom, prevTo) : null;
+    var s = summarize(cur), p = prev ? summarize(prev) : null;
+    $("from").value = S.from; $("to").value = S.to;
+
+    // KPI
+    var k = [
+      { l: "보도 건수", v: fmt(s.n), u: "건", d: delta(s.n, p && p.n) },
+      { l: "통합 이슈", v: fmt(s.issues), u: "개", d: delta(s.issues, p && p.issues) },
+      { l: "보도 매체", v: fmt(s.press), u: "곳", d: delta(s.press, p && p.press) },
+      { l: "확인 조회수", v: fmt(s.views), u: "", d: delta(s.views, p && p.views), h: "공개율 " + fmt(s.rate * 100, 1) + "%" },
+      { l: "이슈당 평균 보도", v: fmt(s.perIssue, 2), u: "건", d: delta(s.perIssue, p && p.perIssue) },
+      { l: "대형 확산 이슈", v: fmt(s.big), u: "개", d: delta(s.big, p && p.big), h: BIG + "개 매체 이상" }
+    ];
+    $("kpis").innerHTML = k.map(function (x) {
+      return '<div class="card kpi"><div class="label">' + x.l + '</div><div class="value">' + x.v + '<small>' + x.u + '</small></div>' +
+        '<div class="delta ' + x.d.cls + '">' + x.d.txt + '</div>' + (x.h ? '<div class="hint">' + x.h + '</div>' : '') + '</div>';
+    }).join("");
+
+    // 시계열
+    var keys = [], d = S.from, seen = {};
+    while (d <= S.to) { var b = bucket(d, S.unit); if (!seen[b]) { seen[b] = 1; keys.push(b); } d = addDays(d, 1); }
+    var byB = {}; keys.forEach(function (x) { byB[x] = { n: 0, iss: {}, v: 0 }; });
+    cur.forEach(function (a) { var g = byB[bucket(a.d, S.unit)]; if (!g) return; g.n++; g.iss[a.c] = 1; if (a.v != null) g.v += a.v; });
+    var labels = keys.map(function (x) { return bucketLabel(x, S.unit); });
+    var unitName = { day: "일별", week: "주별", month: "월별" }[S.unit];
+    $("unitLabel1").textContent = unitName;
+    var blue = css("--blue"), orange = css("--orange"), green = css("--green");
+    chart("cTrend", { type: "bar", data: { labels: labels, datasets: [
+      { type: "bar", label: "보도 건수", data: keys.map(function (x) { return byB[x].n; }), backgroundColor: blue, borderRadius: 3, order: 2 },
+      { type: "line", label: "통합 이슈 수", data: keys.map(function (x) { return Object.keys(byB[x].iss).length; }), borderColor: orange, backgroundColor: orange, pointRadius: keys.length > 60 ? 0 : 2, tension: .25, borderWidth: 2, order: 1 }
+    ] }, options: baseOpts() });
+    chart("cViews", { type: "line", data: { labels: labels, datasets: [
+      { label: "확인 조회수", data: keys.map(function (x) { return byB[x].v; }), borderColor: green, backgroundColor: green + "33", fill: true, pointRadius: keys.length > 60 ? 0 : 2, tension: .25, borderWidth: 2 }
+    ] }, options: baseOpts({ plugins: { legend: { display: false } } }) });
+
+    // 주제
+    var tc = D.topics.map(function () { return 0; });
+    cur.forEach(function (a) { tc[a.tp]++; });
+    var tOrder = tc.map(function (v, i) { return i; }).filter(function (i) { return tc[i] > 0; }).sort(function (a, b) { return tc[b] - tc[a]; });
+    var pal = [blue, orange, green, "#7a5bbf", "#1f9aa8", "#c8402f", "#8a6d3b", "#d4589a", "#5a7290", "#9aa3b2"];
+    chart("cTopic", { type: "bar", data: { labels: tOrder.map(function (i) { return D.topics[i]; }), datasets: [
+      { label: "보도 건수", data: tOrder.map(function (i) { return tc[i]; }), backgroundColor: tOrder.map(function (i, j) { return pal[j % pal.length]; }), borderRadius: 3 }
+    ] }, options: baseOpts({ indexAxis: "y", plugins: { legend: { display: false } },
+      scales: { x: { beginAtZero: true, ticks: { color: css("--text-2"), precision: 0 }, grid: { color: css("--grid") } }, y: { ticks: { color: css("--text-2") }, grid: { display: false } } } }) });
+
+    // 매체
+    var pe = Object.keys(s.pressMap).sort(function (a, b) { return s.pressMap[b] - s.pressMap[a]; }).slice(0, 15);
+    var hopt = function () { return baseOpts({ indexAxis: "y", plugins: { legend: { display: false } },
+      scales: { x: { beginAtZero: true, ticks: { color: css("--text-2"), precision: 0 }, grid: { color: css("--grid") } }, y: { ticks: { color: css("--text-2"), autoSkip: false }, grid: { display: false } } } }); };
+    chart("cPress", { type: "bar", data: { labels: pe.map(function (i) { return D.press[i]; }), datasets: [{ label: "보도 건수", data: pe.map(function (i) { return s.pressMap[i]; }), backgroundColor: blue, borderRadius: 3 }] }, options: hopt() });
+    var pv = {}; cur.forEach(function (a) { if (a.v != null) pv[a.p] = (pv[a.p] || 0) + a.v; });
+    var pvk = Object.keys(pv).sort(function (a, b) { return pv[b] - pv[a]; }).slice(0, 15);
+    chart("cPressViews", { type: "bar", data: { labels: pvk.map(function (i) { return D.press[i]; }), datasets: [{ label: "확인 조회수", data: pvk.map(function (i) { return pv[i]; }), backgroundColor: green, borderRadius: 3 }] }, options: hopt() });
+
+    renderSummary(s, p, span, tOrder, tc);
+    renderPeriodTable(keys, byB, cur);
+    renderIssues(s, cur);
+    renderArticles(cur);
+  }
+
+  // ── 홍보 성과 요약 ──
+  function indicators(s) {
+    var spread = 0, dur = 0, ids = Object.keys(s.issueMap);
+    ids.forEach(function (k) { var c = s.issueMap[k]; spread += Object.keys(c.press).length; dur += diffDays(c.first, c.last) + 1; });
+    var hhi = 0; Object.keys(s.pressMap).forEach(function (k) { var sh = s.pressMap[k] / (s.n || 1); hhi += sh * sh; });
+    var sizes = ids.map(function (k) { return s.issueMap[k].n; }).sort(function (a, b) { return b - a; });
+    var top = Math.max(1, Math.ceil(sizes.length * 0.1)), topSum = sizes.slice(0, top).reduce(function (x, y) { return x + y; }, 0);
+    return { spread: ids.length ? spread / ids.length : 0, dur: ids.length ? dur / ids.length : 0, div: s.n ? 1 - hhi : 0, conc: s.n ? topSum / s.n : 0 };
+  }
+  function renderSummary(s, p, span, tOrder, tc) {
+    var I = indicators(s), PI = p ? indicators(p) : null;
+    var topTopic = tOrder.length ? D.topics[tOrder[0]] : "-";
+    var topIssue = null;
+    Object.keys(s.issueMap).forEach(function (k) { if (!topIssue || s.issueMap[k].n > s.issueMap[topIssue].n) topIssue = k; });
+    var txt = "선택 기간(" + S.from + " ~ " + S.to + ", " + span + "일) 동안 " + esc(M.region || "아산시") + " 관련 기사 <b>" + fmt(s.n) + "건</b>이 <b>" + fmt(s.press) + "개 매체</b>에서 보도되었고, 이는 <b>" + fmt(s.issues) + "개 이슈</b>로 통합됩니다. ";
+    if (p && p.n) { var r = (s.n - p.n) / p.n * 100; txt += "직전 동기간 대비 보도량은 <b>" + (r >= 0 ? fmt(r, 1) + "% 증가" : fmt(-r, 1) + "% 감소") + "</b>했습니다. "; }
+    if (s.n) txt += "가장 많이 보도된 주제는 <b>" + esc(topTopic) + "</b>(" + fmt(tc[tOrder[0]]) + "건)이며, 최대 이슈는 「" + esc(D.clusters[topIssue] || "") + "」(" + fmt(s.issueMap[topIssue].n) + "건)입니다.";
+    else txt = "선택한 조건에 해당하는 기사가 없습니다.";
+    $("summaryText").innerHTML = txt;
+    function dd(c, pv, d) { if (pv == null) return "직전 기간 자료 없음"; var x = c - pv; return "직전 " + fmt(pv, d) + " → " + (x >= 0 ? "+" : "") + fmt(x, d); }
+    var items = [
+      { k: "노출", v: fmt(s.n) + "건", d: "보도 건수 · " + (p ? dd(s.n, p.n, 0) : "직전 기간 자료 없음") },
+      { k: "확산", v: fmt(I.spread, 2) + "곳", d: "이슈당 평균 매체 수 · " + dd(I.spread, PI && PI.spread, 2) },
+      { k: "도달", v: fmt(s.views), d: "확인 조회수(공개율 " + fmt(s.rate * 100, 1) + "%)" },
+      { k: "지속", v: fmt(I.dur, 2) + "일", d: "이슈 평균 보도 지속 기간 · " + dd(I.dur, PI && PI.dur, 2) },
+      { k: "매체 다양성", v: fmt(I.div, 3), d: "1 − HHI (1에 가까울수록 고르게 분산)" },
+      { k: "이슈 집중도", v: fmt(I.conc * 100, 1) + "%", d: "상위 10% 이슈의 보도 비중" }
+    ];
+    $("indicators").innerHTML = items.map(function (x) { return '<div class="ind"><div class="k">' + x.k + '</div><div class="v">' + x.v + '</div><div class="d">' + x.d + '</div></div>'; }).join("");
+  }
+
+  // ── 통계 분석 요약(보고서) ──
+  (function renderAI() {
+    var st = R.stats || {}, ai = R.ai;
+    if (!st.available) { $("aiBox").innerHTML = '<p class="empty">통계 분석 결과가 아직 없습니다.</p>'; return; }
+    var tr = st.trend || {}, wd = st.weekday || {}, de = st.descriptive || {};
+    var sigCorr = (st.correlation || []).filter(function (c) { return c.significant; }).length;
+    $("aiHead").innerHTML = ai && ai.headline
+      ? '<span class="ai-tag">AI 해석</span>' + esc(ai.headline) + (R.ai_status === "reused" ? ' <small style="color:var(--muted);font-weight:500">(직전 해석)</small>' : "")
+      : '<span class="ai-tag" style="background:var(--muted)">통계</span>주간 보도량은 ' + (tr.slope != null ? "주당 " + fmt(tr.slope, 2) + "건 " + (tr.slope >= 0 ? "증가" : "감소") + " 추세" + (tr.significant ? "(p " + pfmt(tr.p) + ")임." : "이나 통계적으로 유의하지 않음.") : "분석 기간이 짧아 추세를 판단하기 어려움.");
+    var nums = [
+      { k: "주간 평균 보도", v: de.weekly ? fmt(de.weekly.mean, 1) + "건" : "-" },
+      { k: "추세(주당)", v: tr.slope != null ? (tr.slope >= 0 ? "+" : "") + fmt(tr.slope, 2) + "건" + stars(tr.p) : "-" },
+      { k: "평일/주말 일평균", v: wd.weekday_mean != null ? fmt(wd.weekday_mean, 1) + " / " + fmt(wd.weekend_mean, 1) : "-" },
+      { k: "유의한 상관", v: sigCorr + " / " + (st.correlation || []).length + "개" }
+    ];
+    $("aiNums").innerHTML = nums.map(function (x) { return '<div><div class="k">' + x.k + '</div><div class="v">' + x.v + '</div></div>'; }).join("");
+    var f = ai && ai.key_findings ? ai.key_findings.slice(0, 3) : (st.limitations || []).slice(0, 1).concat(["AI 해석은 GEMINI_API_KEY 설정 후 매일 갱신 시 생성됩니다."]);
+    $("aiFindings").innerHTML = f.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("");
+  })();
+  function pfmt(p) { return p == null ? "-" : p < 0.001 ? "<0.001" : "= " + p.toFixed(3); }
+  function stars(p) { return p == null ? "" : p < 0.001 ? "***" : p < 0.01 ? "**" : p < 0.05 ? "*" : ""; }
+
+  // ── CSV ──
+  function csv(name, header, rows) {
+    var body = [header].concat(rows).map(function (r) { return r.map(function (v) { v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(","); }).join("\r\n");
+    var blob = new Blob(["﻿" + body], { type: "text/csv;charset=utf-8" });
+    var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+
+  // ── 기간별 성과표 ──
+  var periodRows = [];
+  function renderPeriodTable(keys, byB, cur) {
+    var pressB = {}, bigB = {};
+    cur.forEach(function (a) { var b = bucket(a.d, S.unit); (pressB[b] || (pressB[b] = {}))[a.p] = 1; });
+    periodRows = keys.slice().reverse().map(function (k) {
+      var g = byB[k], iss = Object.keys(g.iss).length;
+      return [bucketLabel(k, S.unit) + (S.unit === "day" ? "" : ""), k, g.n, iss, Object.keys(pressB[k] || {}).length, iss ? g.n / iss : 0, g.v];
+    });
+    $("ptCount").textContent = { day: "일", week: "주", month: "월" }[S.unit] + " 단위 · " + periodRows.length + "개 구간";
+    var html = '<thead><tr><th>구간</th><th>보도 건수</th><th>통합 이슈</th><th>보도 매체</th><th>이슈당 보도</th><th>확인 조회수</th></tr></thead><tbody>';
+    html += periodRows.slice(0, 60).map(function (r) {
+      return '<tr><td class="c">' + esc(S.unit === "week" ? r[1] + " 주" : S.unit === "month" ? r[1] : r[1]) + '</td><td class="num">' + fmt(r[2]) + '</td><td class="num">' + fmt(r[3]) + '</td><td class="num">' + fmt(r[4]) + '</td><td class="num">' + fmt(r[5], 2) + '</td><td class="num">' + fmt(r[6]) + '</td></tr>';
+    }).join("") + "</tbody>";
+    if (periodRows.length > 60) html += '<tfoot><tr><td colspan="6" class="c" style="color:var(--muted)">최근 60개 구간만 표시 · 전체는 CSV로 내려받으세요</td></tr></tfoot>';
+    $("periodTable").innerHTML = html;
+  }
+  $("ptCsv").onclick = function () { csv("기간별성과_" + S.from + "_" + S.to + ".csv", ["구간", "보도건수", "통합이슈", "보도매체", "이슈당보도", "확인조회수"], periodRows.map(function (r) { return [r[1], r[2], r[3], r[4], r[5].toFixed(2), r[6]]; })); };
+
+  // ── 주요 이슈 ──
+  var IS = { sort: "n", dir: -1, page: 0, q: "", rows: [], open: {} };
+  function renderIssues(s, cur) {
+    var byIssue = {};
+    cur.forEach(function (a) { (byIssue[a.c] || (byIssue[a.c] = [])).push(a); });
+    IS.rows = Object.keys(s.issueMap).map(function (k) {
+      var c = s.issueMap[k], arts = byIssue[k], v = 0, vn = 0, tcount = {};
+      arts.forEach(function (a) { if (a.v != null) { v += a.v; vn++; } tcount[a.tp] = (tcount[a.tp] || 0) + 1; });
+      var tp = Object.keys(tcount).sort(function (a, b) { return tcount[b] - tcount[a]; })[0];
+      return { id: k, title: D.clusters[k] || arts[0].t, first: c.first, last: c.last, n: c.n, press: Object.keys(c.press).length, views: vn ? v : null, topic: D.topics[tp], arts: arts };
+    });
+    IS.page = 0; drawIssues();
+  }
+  function drawIssues() {
+    var q = IS.q.trim().toLowerCase();
+    var rows = IS.rows.filter(function (r) { return !q || r.title.toLowerCase().indexOf(q) >= 0; });
+    rows.sort(function (a, b) { var x = a[IS.sort], y = b[IS.sort]; if (x == null) x = -1; if (y == null) y = -1; return (x > y ? 1 : x < y ? -1 : 0) * IS.dir; });
+    IS.filtered = rows;
+    var per = 20, pages = Math.max(1, Math.ceil(rows.length / per)); if (IS.page >= pages) IS.page = pages - 1;
+    $("issueCount").textContent = fmt(rows.length) + "개 이슈";
+    var cols = [["title", "이슈(대표 제목)"], ["topic", "주제"], ["first", "첫 보도"], ["n", "보도 건수"], ["press", "보도 매체"], ["views", "확인 조회수"]];
+    var h = "<thead><tr>" + cols.map(function (c) { return '<th class="sortable' + (IS.sort === c[0] ? (IS.dir > 0 ? " asc" : " desc") : "") + '" data-k="' + c[0] + '">' + c[1] + "</th>"; }).join("") + "</tr></thead><tbody>";
+    if (!rows.length) h += '<tr><td colspan="6" class="empty">해당하는 이슈가 없습니다.</td></tr>';
+    rows.slice(IS.page * per, IS.page * per + per).forEach(function (r) {
+      var open = IS.open[r.id];
+      h += '<tr class="issue' + (open ? " open" : "") + '" data-id="' + r.id + '"><td>' + esc(r.title) + (r.press >= BIG ? ' <span class="chip" style="background:var(--orange);color:#fff">대형</span>' : "") +
+        '</td><td class="c"><span class="chip">' + esc(r.topic) + '</span></td><td class="c">' + r.first + (r.last !== r.first ? " ~ " + r.last.slice(5) : "") + '</td><td class="num">' + fmt(r.n) + '</td><td class="num">' + fmt(r.press) + '</td><td class="num">' + fmt(r.views) + "</td></tr>";
+      if (open) {
+        h += '<tr class="sub"><td colspan="6"><ul>' + r.arts.slice().sort(function (a, b) { return a.d < b.d ? -1 : 1; }).map(function (a) {
+          return "<li>" + a.d + " · <b>" + esc(D.press[a.p]) + '</b> · <a href="' + esc(safeUrl(a.u)) + '" target="_blank" rel="noopener">' + esc(a.t) + "</a>" + (a.v != null ? " · 조회 " + fmt(a.v) : "") + "</li>";
+        }).join("") + "</ul></td></tr>";
+      }
+    });
+    $("issueTable").innerHTML = h + "</tbody>";
+    pager("issuePager", IS.page, pages, function (pg) { IS.page = pg; drawIssues(); });
+  }
+  $("issueTable").onclick = function (e) {
+    var th = e.target.closest("th.sortable");
+    if (th) { var k = th.dataset.k; if (IS.sort === k) IS.dir *= -1; else { IS.sort = k; IS.dir = (k === "title" || k === "topic") ? 1 : -1; } drawIssues(); return; }
+    if (e.target.closest("a")) return;
+    var tr = e.target.closest("tr.issue"); if (!tr) return;
+    IS.open[tr.dataset.id] = !IS.open[tr.dataset.id]; drawIssues();
+  };
+  $("issueSearch").oninput = function () { IS.q = this.value; IS.page = 0; drawIssues(); };
+  $("issueCsv").onclick = function () { csv("주요이슈_" + S.from + "_" + S.to + ".csv", ["이슈", "주제", "첫보도", "마지막보도", "보도건수", "보도매체", "확인조회수"], (IS.filtered || []).map(function (r) { return [r.title, r.topic, r.first, r.last, r.n, r.press, r.views]; })); };
+
+  // ── 기사 목록 ──
+  var AS = { page: 0, q: "", rows: [] };
+  function renderArticles(cur) { AS.rows = cur.slice().sort(function (a, b) { return a.d < b.d ? 1 : a.d > b.d ? -1 : b.id - a.id; }); AS.page = 0; drawArticles(); }
+  function drawArticles() {
+    var q = AS.q.trim().toLowerCase();
+    var rows = AS.rows.filter(function (a) { return !q || a.t.toLowerCase().indexOf(q) >= 0 || D.press[a.p].toLowerCase().indexOf(q) >= 0; });
+    AS.filtered = rows;
+    var per = 25, pages = Math.max(1, Math.ceil(rows.length / per)); if (AS.page >= pages) AS.page = pages - 1;
+    $("artCount").textContent = fmt(rows.length) + "건";
+    var h = "<thead><tr><th>날짜</th><th>매체</th><th>제목</th><th>주제</th><th>조회수</th></tr></thead><tbody>";
+    if (!rows.length) h += '<tr><td colspan="5" class="empty">해당하는 기사가 없습니다.</td></tr>';
+    h += rows.slice(AS.page * per, AS.page * per + per).map(function (a) {
+      return '<tr><td class="c">' + a.d + '</td><td style="white-space:nowrap">' + esc(D.press[a.p]) + '</td><td><a href="' + esc(safeUrl(a.u)) + '" target="_blank" rel="noopener">' + esc(a.t) + '</a></td><td class="c"><span class="chip">' + esc(D.topics[a.tp]) + '</span></td><td class="num">' + fmt(a.v) + "</td></tr>";
+    }).join("");
+    $("artTable").innerHTML = h + "</tbody>";
+    pager("artPager", AS.page, pages, function (pg) { AS.page = pg; drawArticles(); });
+  }
+  $("artSearch").oninput = function () { AS.q = this.value; AS.page = 0; drawArticles(); };
+  $("artCsv").onclick = function () { csv("기사목록_" + S.from + "_" + S.to + ".csv", ["날짜", "매체", "제목", "주제", "조회수", "URL"], (AS.filtered || []).map(function (a) { return [a.d, D.press[a.p], a.t, D.topics[a.tp], a.v, a.u]; })); };
+
+  function pager(id, page, pages, go) {
+    var el = $(id);
+    if (pages <= 1) { el.innerHTML = ""; return; }
+    el.innerHTML = '<button class="btn" data-g="prev"' + (page === 0 ? " disabled" : "") + '>이전</button><span>' + (page + 1) + " / " + pages + '</span><button class="btn" data-g="next"' + (page >= pages - 1 ? " disabled" : "") + ">다음</button>";
+    el.onclick = function (e) { var b = e.target.closest("button"); if (!b || b.disabled) return; go(b.dataset.g === "prev" ? page - 1 : page + 1); };
+  }
+
+  // ── 관리자 모드(/admin 에서만) ──
+  var isAdmin = location.pathname.replace(/\/+$/, "") === "/admin";
+  function api(path, opt) {
+    return fetch(path, Object.assign({ credentials: "same-origin", headers: { "Content-Type": "application/json" } }, opt || {}))
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { j._status = r.status; return j; }); });
+  }
+  function showAdmin(on, info) {
+    $("loginModal").hidden = on;
+    $("adminBadge").hidden = $("refreshBtn").hidden = $("logoutBtn").hidden = !on;
+    if (on && info && info.canRefresh === false) { $("refreshBtn").disabled = true; $("refreshBtn").title = "GITHUB_TOKEN 환경변수가 없어 갱신할 수 없습니다."; }
+  }
+  if (isAdmin) {
+    api("/api/me").then(function (j) { showAdmin(!!j.admin, j); if (j.admin) pollStatus(true); });
+    $("loginForm").onsubmit = function (e) {
+      e.preventDefault(); $("loginErr").textContent = "";
+      api("/api/login", { method: "POST", body: JSON.stringify({ id: $("loginId").value, password: $("loginPw").value }) }).then(function (j) {
+        if (j.ok) { $("loginPw").value = ""; showAdmin(true, j); pollStatus(true); }
+        else $("loginErr").textContent = j.error || "로그인에 실패했습니다.";
+      });
+    };
+    $("logoutBtn").onclick = function () { api("/api/logout", { method: "POST" }).then(function () { showAdmin(false); }); };
+    $("refreshBtn").onclick = function () {
+      if (!confirm("최신 뉴스를 수집해 대시보드를 갱신할까요? (약 3~6분 소요)")) return;
+      $("refreshBtn").disabled = true;
+      api("/api/refresh", { method: "POST" }).then(function (j) {
+        if (!j.ok) { alert(j.error || "갱신 요청에 실패했습니다."); $("refreshBtn").disabled = false; return; }
+        progress("수집 중… (GitHub Actions 실행)"); pollStatus(false);
+      });
+    };
+  }
+  var pollTimer = null;
+  function progress(t) { $("progress").hidden = !t; $("progress").textContent = t || ""; }
+  function pollStatus(once) {
+    clearTimeout(pollTimer);
+    api("/api/refresh-status").then(function (j) {
+      if (j._status !== 200) return;
+      var run = j.run;
+      if (j.generated && M.generated && j.generated !== M.generated) { progress("새 데이터 반영 — 새로고침합니다"); setTimeout(function () { location.reload(); }, 1200); return; }
+      if (run && (run.status === "queued" || run.status === "in_progress")) { progress("수집 중… (" + (run.status === "queued" ? "대기" : "실행") + ")"); $("refreshBtn").disabled = true; }
+      else if (run && run.status === "completed" && !once) {
+        if (run.conclusion === "success") progress("배포 중… (Render 재배포 대기)");
+        else { progress("갱신 실패: " + run.conclusion); $("refreshBtn").disabled = false; return; }
+      } else if (once) { progress(""); }
+      if (!once || (run && run.status !== "completed")) pollTimer = setTimeout(function () { pollStatus(false); }, 15000);
+    });
+  }
+
+  setPreset("30");
+  render();
+})();
+</script>
+</body>
+</html>
